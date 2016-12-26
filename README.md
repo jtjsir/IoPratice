@@ -3,7 +3,7 @@
 	体现在线程竞争资源上是必须一个一个线程访问竞争资源
 
 异步：多个任务或者事件可并发执行，一个事件或者任务的执行不会导致整个流程的等待
-	体现在线程竞争资源上是可同时访问竞争资源并立即返回
+	体现在线程竞争资源上是可同时访问竞争资源
 
 keyword:竞争资源；多任务
 
@@ -32,4 +32,39 @@ keyword:阻塞条件
 
 --阻塞IO/非阻塞IO
   都是反应在读操作的第一个阶段
+
+
+--IO原型
+BIO-线程池模式、NIO-Reactor模式（读写异步+事件注册+轮询事件）、AIO-Proactor模式
+
+------------------------NIO浅析------------------------
+
+1）SelectionKey事件:int
+OP_READ(1)/OP_ACCEPT(16)/OP_WRITE(4)/OP_CONNECT(8)
+
+2）socketChannel.register(Selector selector,int interestOps):SelectionKey
+一个通道channel/连接 对应一个唯一的selectionKey，这个唯一的key对应多个事件
+interestOps=5表示读操作+写操作(1+4)
+上述的注册等同于selectionKey.interestOps(int interestOps)
+
+3）Selector.select()阻塞方法，直到至少有一个channel被选择到或者被唤醒或者被中断
+Selector.selectedKeys()根据keys来生成publicSelectedKeys，所以之前注册过的事件应当删除
+
+
+
+------------------------AIO浅析------------------------
+/**
+ * AIO-Proactor模型 纯异步非阻塞IO
+ * 
+ * 应用于Netty/Mina等异步框架
+ * 
+ * 内部也采用了连接池+事件通知(系统级)
+ * 
+ * @author jtj
+ *         accept()/read()/write()/connect()方法中的第一个参数类型就是ComplectionHandler的第二个参数类型
+ */
+
+ComplectionHandler()是其最重要的回调类，其中的completed()/failed()方法对应事件的请求成功后/失败
+
+针对读写都是返回操作后的读写，即操作系统处理好读写字节后返回给用户线程的
 

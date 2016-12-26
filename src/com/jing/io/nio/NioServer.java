@@ -9,6 +9,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
 
+import sun.misc.Cleaner;
+
 /**
  * Reactor模式
  * 
@@ -44,7 +46,7 @@ public class NioServer {
 
 	private void listen() throws Exception {
 		while (true) {
-			// 此方法为阻塞,返回注册事件个数，包含多个通道连接到本服务注册的事件
+			// 此方法为阻塞,返回准备就绪的注册事件个数，包含多个通道连接到本服务注册的事件
 			serverSelector.select();
 
 			Set<SelectionKey> keys = serverSelector.selectedKeys();
@@ -65,9 +67,13 @@ public class NioServer {
 				serverChannel = (ServerSocketChannel) key.channel();
 				try {
 					clientChannel = serverChannel.accept();
-					clientChannel.configureBlocking(false);
-					// 注册读事件，读写都是通过clientChannel通道来完成的
-					clientChannel.register(serverSelector, SelectionKey.OP_READ);
+					if (clientChannel != null) {
+						clientChannel.configureBlocking(false);
+						// 供多个连接接入
+						serverChannel.register(serverSelector, SelectionKey.OP_ACCEPT);
+						// 注册读事件，读写都是通过clientChannel通道来完成的
+						clientChannel.register(serverSelector, SelectionKey.OP_READ);
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -80,6 +86,9 @@ public class NioServer {
 					if (count > 0) {
 						System.err.println("客户端发来的消息为: " + new String(receiveBuf.array(), 0, count));
 						clientChannel.register(serverSelector, SelectionKey.OP_WRITE);
+					} else if (count < 0) {
+						//关闭通道
+						clientChannel.socket().close();
 					}
 				} catch (IOException e) {
 					e.printStackTrace();

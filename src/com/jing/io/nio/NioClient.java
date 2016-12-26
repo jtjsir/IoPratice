@@ -89,7 +89,31 @@ public class NioClient {
 	}
 
 	public static void main(String[] args) {
-		NioClient client = new NioClient("127.0.0.1", 8888);
-		client.connect();
+		Thread clientThread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				NioClient client = new NioClient("127.0.0.1", 8888);
+				client.connect();
+
+			}
+		});
+		clientThread.start();
+
+		try {
+			Thread.sleep(5 * 1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Thread clientThread2 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				NioClient client = new NioClient("127.0.0.1", 8888);
+				client.connect();
+
+			}
+		});
+		clientThread2.start();
 	}
 }
