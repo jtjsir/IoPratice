@@ -23,6 +23,7 @@ public class AioClientReadHandler implements CompletionHandler<Integer, ByteBuff
 		buffer.flip();
 		byte[] data = new byte[buffer.remaining()];
 		try {
+			buffer.get(data) ;
 			System.err.println("接收到的服务端的信息为: " + new String(data, "UTF-8"));
 		} catch (Exception e) {
 			e.printStackTrace();
